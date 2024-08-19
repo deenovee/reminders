@@ -33,19 +33,37 @@ class Email:
         self.message = ''
 
     def send_email(self, assignments, tests):
-        self.message = f'Assignments due by {datetime.date.today() + datetime.timedelta(days=5)}:\n'
-        for assignment in assignments:
-            self.message += f'{assignment[0]}: {assignment[1]}\n'
-        self.message += '\n'
-        
-        self.message += f'Tests due by {datetime.date.today() + datetime.timedelta(weeks=2)}:\n'
-        for test in tests:
-            self.message += f'{test[0]}: {test[1]}\n'
-        
-        # Send email
+        # Prepare the HTML email headers
+        headers = f"From: {self.email}\n"
+        headers += f"To: {self.recipient}\n"
+        headers += f"Subject: {self.subject}\n"
+        headers += "Content-Type: text/html\n\n"
+
+        # Prepare the HTML body with inline CSS
+        html_body = f"""
+        <html>
+            <body style="font-family: Arial, sans-serif; color: #333;">
+                <h2 style="color: #2E86C1;">Upcoming Due Dates</h2>
+                <h3 style="color: #1B4F72;">Assignments due by {datetime.date.today() + datetime.timedelta(days=5)}:</h3>
+                <ul>
+                    {"".join([f"<li>{assignment[0]}: {assignment[1]}</li>" for assignment in assignments])}
+                </ul>
+                <h3 style="color: #1B4F72;">Tests due by {datetime.date.today() + datetime.timedelta(weeks=2)}:</h3>
+                <ul>
+                    {"".join([f"<li>{test[0]}: {test[1]}</li>" for test in tests])}
+                </ul>
+            </body>
+        </html>
+        """
+
+        # Combine headers and HTML body
+        full_message = headers + html_body
+
+        # Send the email to the recipient
         with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
             smtp.login(self.email, self.password)
-            smtp.sendmail(self.email, self.recipient, f'Subject: {self.subject}\n\n{self.message}')
+            smtp.sendmail(self.email, self.recipient, full_message)
+
     
 if __name__ == '__main__':
     report = Report()
